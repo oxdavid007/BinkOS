@@ -141,7 +141,14 @@ export class AlchemyProvider implements ITokenProvider, IWalletProvider {
       if (response.data && response.data.data && response.data.data.tokens) {
         const tokens = response.data.data.tokens;
         data = tokens
-          .filter((token: any) => token.tokenPrices.length > 0 && BigInt(token.tokenBalance) > 0n)
+          .filter(
+            (token: any) =>
+              token.tokenAddress &&
+              token.tokenMetadata &&
+              token.tokenPrices.length > 0 &&
+              BigInt(token.tokenBalance) > 0n &&
+              token.tokenPrices[0].value > 0,
+          )
           .map((token: any) => {
             return {
               tokenAddress: token.tokenAddress,
