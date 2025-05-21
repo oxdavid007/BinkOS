@@ -595,5 +595,23 @@ describe('AI Plugin Tests', () => {
         },
       );
     }, 30000);
+    it('Test 7: Swap with output amount', async () => {
+      await testOperation(
+        agent,
+        toolMonitor,
+        askMonitor,
+        mockSwapPlugin,
+        6,
+        'swap 0.001 SOL from USDC',
+        {
+          fromToken: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+          toToken: 'So11111111111111111111111111111111111111111',
+          amount: '0.001',
+          amountType: 'output',
+          network: 'solana',
+          slippage: 1,
+        },
+      );
+    }, 30000);
   });
 });
