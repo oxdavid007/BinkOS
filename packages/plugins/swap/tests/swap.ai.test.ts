@@ -592,7 +592,7 @@ describe('Planning Agent', () => {
 
   // Test Case 6: Reverse swap with BNB - Should succeed
   it('Test 6: Reverse swap to buy BNB', async () => {
-    await testSwapOperation(6, 'buy 0.001 BNB with BINK', {
+    await testSwapOperation(6, 'buy 0.001 BNB from BINK', {
       fromToken: '0x5fdfafd107fc267bd6d6b1c08fcafb8d31394ba1',
       toToken: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
       amount: '0.001',
@@ -613,8 +613,17 @@ describe('Planning Agent', () => {
     });
   }, 90000);
 
-  // Test Case 8: Invalid token symbol - Pass if asks with appropriate keywords
-  it('Test 8: Swap with invalid token symbol', async () => {
+  it('Test 8: Sell case', async () => {
+    await testSwapOperation(6, 'sell 10 USDT to BINK', {
+      fromToken: '0x5fdfafd107fc267bd6d6b1c08fcafb8d31394ba1',
+      toToken: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+      amount: '10',
+      amountType: 'input',
+      network: 'bnb',
+    });
+  }, 90000);
+  // Test Case 9: Invalid token symbol - Pass if asks with appropriate keywords
+  it('Test 9: Swap with invalid token symbol', async () => {
     await testSwapOperation(
       8,
       'swap 0.001 INVALID_TOKEN to USDC',
@@ -626,8 +635,8 @@ describe('Planning Agent', () => {
     );
   }, 90000);
 
-  // Test Case 9: Invalid amount (too large) - Pass if asks with appropriate keywords
-  it('Test 9: Swap with unreasonably large amount', async () => {
+  // Test Case 10: Invalid amount (too large) - Pass if asks with appropriate keywords
+  it('Test 10: Swap with unreasonably large amount', async () => {
     await testSwapOperation(
       9,
       'swap 999999 SOL to USDC',
@@ -642,8 +651,8 @@ describe('Planning Agent', () => {
     );
   }, 90000);
 
-  // Test Case 10: Complex natural language query - Should succeed
-  it('Test 10: Swap with complex natural language', async () => {
+  // Test Case 11: Complex natural language query - Should succeed
+  it('Test 11: Swap with complex natural language', async () => {
     await testSwapOperation(10, 'I would like to exchange 0.001 SOL for some USDC tokens please', {
       fromToken: 'So11111111111111111111111111111111111111111',
       toToken: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
@@ -653,8 +662,8 @@ describe('Planning Agent', () => {
     });
   }, 90000);
 
-  // Test Case 11: Small amount - Pass if asks with appropriate keywords
-  it('Test 11: Swap with amount too small', async () => {
+  // Test Case 12ss: Small amount - Pass if asks with appropriate keywords
+  it('Test 12: Swap with amount too small', async () => {
     await testSwapOperation(
       11,
       'swap 0.0000001 SOL to USDC',

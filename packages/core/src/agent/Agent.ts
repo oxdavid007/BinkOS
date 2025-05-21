@@ -23,7 +23,12 @@ export class Agent extends BaseAgent {
   protected db: DatabaseAdapter<any> | undefined;
   protected context: AgentContext = {};
   public readonly config: AgentConfig;
-  constructor(model: IModel, config: AgentConfig, wallet: IWallet, networks: NetworksConfig['networks']) {
+  constructor(
+    model: IModel,
+    config: AgentConfig,
+    wallet: IWallet,
+    networks: NetworksConfig['networks'],
+  ) {
     super();
     this.model = model;
     this.wallet = wallet;

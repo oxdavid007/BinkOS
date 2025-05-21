@@ -61,10 +61,14 @@ export class PlanningAgent extends Agent {
   private _isAskUser = false;
   private askUserTimeout: NodeJS.Timeout | null = null;
   private _processedThreads: Set<string> = new Set();
-  constructor(model: BaseModel, config: AgentConfig, wallet: IWallet, networks: NetworksConfig['networks']) {
+  constructor(
+    model: BaseModel,
+    config: AgentConfig,
+    wallet: IWallet,
+    networks: NetworksConfig['networks'],
+  ) {
     super(model, config, wallet, networks);
   }
-
 
   protected getDefaultTools(): ITool[] {
     return [];
@@ -150,7 +154,10 @@ export class PlanningAgent extends Agent {
       const tool = tools.find(t => t.name === toolName);
       const result = await tool?.invoke(toolArgs);
       return {
-        next_node: typeof result === 'object' && result !== null && 'next' in result ? result.next : undefined,
+        next_node:
+          typeof result === 'object' && result !== null && 'next' in result
+            ? result.next
+            : undefined,
       };
     }
     return response;
