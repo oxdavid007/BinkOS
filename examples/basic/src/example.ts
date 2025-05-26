@@ -239,9 +239,9 @@ async function main() {
   await agent.registerPlugin(tokenPlugin);
   console.log('✓ Plugin registered\n');
 
-  console.log('🔌 Registering bridge plugin with agent...');
-  await agent.registerPlugin(bridgePlugin);
-  console.log('✓ Plugin registered\n');
+  // console.log('🔌 Registering bridge plugin with agent...');
+  // await agent.registerPlugin(bridgePlugin);
+  // console.log('✓ Plugin registered\n');
 
   // Example 1: Buy with exact input amount on BNB Chain
   // console.log('💱 Example 1: Buy BINK from exactly 0.0001 BNB with 0.5% slippage on bnb chain.');
@@ -257,7 +257,7 @@ async function main() {
   console.log('💱 Example 2: buy BINK from 10 USDC on solana');
   const result2 = await agent.execute({
     input: `
-    Swap BINK to USDC 
+    Swap 0.002 BNB to USD1 on pancakeswap
     `,
   });
 

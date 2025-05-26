@@ -54,6 +54,16 @@ export const defaultTokens: Partial<Record<NetworkName, Record<string, TokenInfo
       // logoURI: 'https://tokens.pancakeswap.finance/images/symbol/usdt.png',
       verified: true,
     },
+    // USD1
+    '0x8d0D000Ee44948FC98c9B98A4FA4921476f08B0d': {
+      address: '0x8d0D000Ee44948FC98c9B98A4FA4921476f08B0d',
+      symbol: 'USD1',
+      name: 'World Liberty Financial USD',
+      decimals: 18,
+      network: NetworkName.BNB,
+      //logoURI: 'https://tokens.pancakeswap.finance/images/symbol/usd1.png',
+      verified: true,
+    },
     // CAKE
     '0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82': {
       address: '0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82',
