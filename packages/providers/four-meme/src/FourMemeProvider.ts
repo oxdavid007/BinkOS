@@ -13,6 +13,7 @@ const CONSTANTS = {
   FOUR_MEME_FACTORY_V2: '0x5c952063c7fc8610FFDB798152D69F0B9550762b',
   USDC_ADDRESS: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d',
   USDT_ADDRESS: '0x55d398326f99059ff775485246999027b3197955',
+  USD1_ADDRESS: '0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d',
   BNB_ADDRESS: EVM_NATIVE_TOKEN_ADDRESS,
   FOUR_MEME_API_BASE: process.env.FOUR_MEME_API_BASE || 'https://four.meme/meme-api/v1',
 } as const;
@@ -166,7 +167,11 @@ export class FourMemeProvider extends BaseSwapProvider {
           ? tokenOut.address
           : tokenIn.address;
 
-      if (needToken == CONSTANTS.USDC_ADDRESS || needToken == CONSTANTS.USDT_ADDRESS) {
+      if (
+        needToken == CONSTANTS.USDC_ADDRESS ||
+        needToken == CONSTANTS.USDT_ADDRESS ||
+        needToken == CONSTANTS.USD1_ADDRESS
+      ) {
         throw new Error('Token is not supported');
       }
 
