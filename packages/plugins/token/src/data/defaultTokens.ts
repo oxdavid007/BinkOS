@@ -54,7 +54,7 @@ export const defaultTokens: Partial<Record<NetworkName, Record<string, TokenInfo
       // logoURI: 'https://tokens.pancakeswap.finance/images/symbol/usdt.png',
       verified: true,
     },
-    // BNB - Native token
+    // USD1
     '0x8d0D000Ee44948FC98c9B98A4FA4921476f08B0d': {
       address: '0x8d0D000Ee44948FC98c9B98A4FA4921476f08B0d',
       symbol: 'USD1',
