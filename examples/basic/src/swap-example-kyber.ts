@@ -133,9 +133,8 @@ async function main() {
   console.log('💱 Example 1: Buy with exact input amount on BNB Chain');
   const result1 = await agent.execute({
     input: `
-      Buy 0.001 BNB to BINK on Kyber
+      Buy 0.001 BNB to USD1 on Kyber
       Use the following token addresses:
-      BINK: 0x5fdfaFd107Fc267bD6d6B1C08fcafb8d31394ba1
     `,
   });
   console.log('✓ Swap result:', result1, '\n');
