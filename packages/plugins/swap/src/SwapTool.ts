@@ -111,7 +111,7 @@ export class SwapTool extends BaseTool {
       amountType: z
         .enum(['input', 'output'])
         .describe('Whether the amount is input (spend) or output (receive)'),
-      network: z.enum(['bnb', 'solana', 'ethereum', 'null'])
+      network: z.enum(['bnb', 'solana', 'ethereum', 'base', 'null'])
         .describe(`Determine blockchain network from user input. 
         Priority rules:
           1. Use explicitly mentioned network

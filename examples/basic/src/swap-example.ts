@@ -29,7 +29,7 @@ import { AlchemyProvider } from '@binkai/alchemy-provider';
 const BNB_RPC = 'https://bsc-dataseed1.binance.org';
 const ETH_RPC = 'https://eth.llamarpc.com';
 const SOL_RPC = 'https://api.mainnet-beta.solana.com';
-const BASE_RPC = 'https://base.meowrpc.com';
+const BASE_RPC = 'https://base.llamarpc.com';
 
 async function main() {
   console.log('🚀 Starting BinkOS swap example...\n');
@@ -222,9 +222,8 @@ async function main() {
   console.log('💱 Example 1: Buy with exact input amount all providers');
   const result1 = await agent.execute({
     input: `
-        swap 0.01 ETH to USDC on base by kyber.
+        swap 0.01 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee to 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 on base by kyber.
     `,
-    threadId: 'e29d9eef-e670-4a97-b2cf-0dc3f8bb4490',
   });
   console.log('✓ Result:', result1, '\n');
 

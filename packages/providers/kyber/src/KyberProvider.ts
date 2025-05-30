@@ -170,6 +170,11 @@ export class KyberProvider extends BaseSwapProvider {
 
         amountIn = ethers.parseUnits(realAmount.toString(), sourceToken.decimals).toString();
       }
+
+      console.log('🚀 ~ KyberProvider ~ getQuote ~ amountIn:', amountIn);
+      console.log('🚀 ~ KyberProvider ~ getQuote ~ sourceToken:', sourceToken);
+      console.log('🚀 ~ KyberProvider ~ getQuote ~ destinationToken:', destinationToken);
+      console.log('🚀 ~ KyberProvider ~ getQuote ~ userAddress:', userAddress);
       // Get swap route and transaction data
       const { routeData, transactionData } = await this.callKyberApi(
         amountIn,
