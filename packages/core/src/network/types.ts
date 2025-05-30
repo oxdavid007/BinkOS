@@ -7,6 +7,7 @@ export enum NetworkName {
   SOLANA = 'solana',
   SEPOLIA = 'sepolia',
   SOLANA_DEVNET = 'solana-devnet',
+  BASE = 'base',
 }
 
 export interface BaseNetworkConfig {
