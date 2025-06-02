@@ -9,6 +9,7 @@ import {
   NetworkName,
   logger,
   OpenAIModel,
+  PlanningAgent,
 } from '@binkai/core';
 import { SwapPlugin } from '@binkai/swap-plugin';
 import { OkxProvider } from '@binkai/okx-provider';
@@ -21,12 +22,14 @@ import { BridgePlugin } from '@binkai/bridge-plugin';
 import { deBridgeProvider } from '@binkai/debridge-provider';
 import { WalletPlugin } from '@binkai/wallet-plugin';
 import { BnbProvider } from '@binkai/rpc-provider';
-import { GroqModel } from '@binkai/core/src/model/GroqModel';
+import { KyberProvider } from '@binkai/kyber-provider';
+import { AlchemyProvider } from '@binkai/alchemy-provider';
 
 // Hardcoded RPC URLs for demonstration
 const BNB_RPC = 'https://bsc-dataseed1.binance.org';
 const ETH_RPC = 'https://eth.llamarpc.com';
 const SOL_RPC = 'https://api.mainnet-beta.solana.com';
+const BASE_RPC = 'https://base.llamarpc.com';
 
 async function main() {
   console.log('🚀 Starting BinkOS swap example...\n');
@@ -83,6 +86,19 @@ async function main() {
         },
       },
     },
+    [NetworkName.BASE]: {
+      type: 'evm' as NetworkType,
+      config: {
+        chainId: 8453,
+        rpcUrl: BASE_RPC,
+        name: 'Base',
+        nativeCurrency: {
+          name: 'Ether',
+          symbol: 'ETH',
+          decimals: 18,
+        },
+      },
+    },
   };
   console.log('✓ Networks configured:', Object.keys(networks).join(', '), '\n');
 
@@ -90,13 +106,17 @@ async function main() {
     apiKey: settings.get('BIRDEYE_API_KEY'),
   });
 
+  const alchemyProvider = new AlchemyProvider({
+    apiKey: settings.get('ALCHEMY_API_KEY'),
+  });
+
   const walletPlugin = new WalletPlugin();
 
   const tokenPlugin = new TokenPlugin();
   await tokenPlugin.initialize({
     // defaultChain: 'solana',
-    providers: [birdeye],
-    supportedChains: ['solana', 'bnb', 'ethereum'],
+    providers: [birdeye, alchemyProvider],
+    supportedChains: ['solana', 'bnb', 'ethereum', 'base'],
   });
   console.log('✓ Token plugin initialized\n');
 
@@ -110,6 +130,7 @@ async function main() {
   const bnb_provider = new ethers.JsonRpcProvider(BNB_RPC);
   const sol_provider = new Connection(SOL_RPC);
   const eth_provider = new ethers.JsonRpcProvider(ETH_RPC);
+  const base_provider = new ethers.JsonRpcProvider(BASE_RPC);
 
   const bnbProvider = new BnbProvider({
     rpcUrl: BNB_RPC,
@@ -117,7 +138,7 @@ async function main() {
   await walletPlugin.initialize({
     // defaultChain: 'bnb',
     providers: [bnbProvider, birdeye],
-    supportedChains: ['bnb', 'solana'],
+    supportedChains: ['bnb', 'solana', 'base'],
   });
   console.log('✓ Provider initialized\n');
 
@@ -137,17 +158,14 @@ async function main() {
   console.log('🤖 Wallet BNB:', await wallet.getAddress(NetworkName.BNB));
   console.log('🤖 Wallet ETH:', await wallet.getAddress(NetworkName.ETHEREUM));
   console.log('🤖 Wallet SOL:', await wallet.getAddress(NetworkName.SOLANA));
+  console.log('🤖 Wallet BASE:', await wallet.getAddress(NetworkName.BASE));
+
   // Create an agent with OpenAI
   console.log('🤖 Initializing AI agent...');
 
-  // const llm = new OpenAIModel({
-  //   apiKey: settings.get('OPENAI_API_KEY') || "",
-  //   model: "gpt-4o-mini",
-  // });
-
-  const llm = new GroqModel({
-    apiKey: settings.get('GROQ_API_KEY') || '',
-    model: 'llama-3.3-70b-versatile',
+  const llm = new OpenAIModel({
+    apiKey: settings.get('OPENAI_API_KEY') || '',
+    model: 'gpt-4o-mini',
   });
 
   const agent = new Agent(
@@ -155,7 +173,7 @@ async function main() {
     {
       temperature: 0,
       systemPrompt:
-        'You are a BINK AI agent. You are able to perform bridge and get token information on multiple chains. If you do not have the token address, you can use the symbol to get the token information before performing a bridge.',
+        'You are a BINK AI agent. You are able to perform swaps, bridges and get token information on multiple chains. If you do not have the token address, you can use the symbol to get the token information before performing a bridge or swap.',
     },
     wallet,
     networks,
@@ -170,13 +188,14 @@ async function main() {
   const okx = new OkxProvider(bnb_provider, 56);
   const jupiter = new JupiterProvider(sol_provider);
   const thena = new ThenaProvider(eth_provider, 1);
+  const kyber = new KyberProvider(base_provider, 8453 as number);
 
   // Configure the plugin with supported chains
   await swapPlugin.initialize({
     defaultSlippage: 0.5,
     // defaultChain: 'bnb',
-    providers: [okx, thena, jupiter],
-    supportedChains: ['bnb', 'ethereum', 'solana'], // These will be intersected with agent's networks
+    providers: [okx, thena, jupiter, kyber],
+    supportedChains: ['bnb', 'ethereum', 'solana', 'base'], // These will be intersected with agent's networks
   });
 
   console.log('✓ Swap plugin initialized\n');
@@ -189,7 +208,7 @@ async function main() {
   await bridgePlugin.initialize({
     // defaultChain: 'bnb',
     providers: [debridge],
-    supportedChains: ['bnb', 'solana'], // These will be intersected with agent's networks
+    supportedChains: ['bnb', 'solana', 'base'], // These will be intersected with agent's networks
   });
 
   // Register the plugin with the agent
@@ -203,7 +222,7 @@ async function main() {
   console.log('💱 Example 1: Buy with exact input amount all providers');
   const result1 = await agent.execute({
     input: `
-        swap 0.01 SOL to USDC on solana.
+        swap 1 USDC to 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee on base by kyber.
     `,
   });
   console.log('✓ Result:', result1, '\n');

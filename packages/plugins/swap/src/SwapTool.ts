@@ -111,7 +111,7 @@ export class SwapTool extends BaseTool {
       amountType: z
         .enum(['input', 'output'])
         .describe('Whether the amount is input (spend) or output (receive)'),
-      network: z.enum(['bnb', 'solana', 'ethereum', 'null'])
+      network: z.enum(['bnb', 'solana', 'ethereum', 'base', 'null'])
         .describe(`Determine blockchain network from user input. 
         Priority rules:
           1. Use explicitly mentioned network
@@ -361,6 +361,9 @@ export class SwapTool extends BaseTool {
     // STEP 5: Check balance
     try {
       const balanceCheck = await selectedProvider.checkBalance(quote, userAddress);
+      console.log('🤖 Balance check result:', balanceCheck);
+      console.log('🤖 quote check result:', quote);
+
       if (!balanceCheck.isValid) {
         throw 'Insufficient balance for this swap';
       }

@@ -8,12 +8,16 @@ const CONSTANTS = {
   APPROVE_GAS_LIMIT: '50000',
   QUOTE_EXPIRY: 5 * 60 * 1000, // 5 minutes in milliseconds
   KYBER_BNB_ADDRESS: EVM_NATIVE_TOKEN_ADDRESS,
-  KYBER_API_BASE: 'https://aggregator-api.kyberswap.com/bsc/',
+  KYBER_API_BASE: {
+    [NetworkName.BNB]: 'https://aggregator-api.kyberswap.com/bsc/',
+    [NetworkName.BASE]: 'https://aggregator-api.kyberswap.com/base/',
+  },
 } as const;
 
 enum ChainId {
   BSC = 56,
   ETH = 1,
+  BASE = 8453,
 }
 
 export class KyberProvider extends BaseSwapProvider {
@@ -25,6 +29,9 @@ export class KyberProvider extends BaseSwapProvider {
     // Create a Map with BNB network and the provider
     const providerMap = new Map<NetworkName, NetworkProvider>();
     providerMap.set(NetworkName.BNB, provider);
+    if (chainId === ChainId.BASE) {
+      providerMap.set(NetworkName.BASE, provider);
+    }
 
     super(providerMap);
     this.provider = provider;
@@ -36,11 +43,11 @@ export class KyberProvider extends BaseSwapProvider {
   }
 
   getSupportedChains(): string[] {
-    return ['bnb', 'ethereum'];
+    return ['bnb', 'ethereum', 'base'];
   }
 
   getSupportedNetworks(): NetworkName[] {
-    return [NetworkName.BNB];
+    return [NetworkName.BNB, NetworkName.BASE];
   }
 
   protected isNativeToken(tokenAddress: string): boolean {
@@ -52,7 +59,7 @@ export class KyberProvider extends BaseSwapProvider {
       return {
         address: tokenAddress as `0x${string}`,
         decimals: 18,
-        symbol: 'BNB',
+        symbol: network === NetworkName.BASE ? 'ETH' : 'BNB',
       };
     }
 
@@ -73,25 +80,29 @@ export class KyberProvider extends BaseSwapProvider {
     toToken: Token,
     userAddress: string,
   ) {
+    const network = this.chainId === ChainId.BASE ? NetworkName.BASE : NetworkName.BNB;
     const routePath = `api/v1/routes?tokenIn=${fromToken.address}&tokenOut=${toToken.address}&amountIn=${amount}&gasInclude=true`;
     logger.info('🤖 Kyber Path', routePath);
-    const routeResponse = await fetch(`${CONSTANTS.KYBER_API_BASE}${routePath}`);
+    const routeResponse = await fetch(`${CONSTANTS.KYBER_API_BASE[network]}${routePath}`);
     const routeData = await routeResponse.json();
 
     if (!routeData.data || routeData.data.length === 0) {
       throw new Error('No swap routes available from Kyber');
     }
 
-    const transactionResponse = await fetch(`${CONSTANTS.KYBER_API_BASE}api/v1/route/build`, {
-      method: 'POST',
-      body: JSON.stringify({
-        routeSummary: routeData.data.routeSummary,
-        sender: userAddress,
-        recipient: userAddress,
-        skipSimulateTx: false,
-        slippageTolerance: 200,
-      }),
-    });
+    const transactionResponse = await fetch(
+      `${CONSTANTS.KYBER_API_BASE[network]}api/v1/route/build`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          routeSummary: routeData.data.routeSummary,
+          sender: userAddress,
+          recipient: userAddress,
+          skipSimulateTx: false,
+          slippageTolerance: 200,
+        }),
+      },
+    );
 
     return {
       routeData: routeData.data,
@@ -159,6 +170,11 @@ export class KyberProvider extends BaseSwapProvider {
 
         amountIn = ethers.parseUnits(realAmount.toString(), sourceToken.decimals).toString();
       }
+
+      console.log('🚀 ~ KyberProvider ~ getQuote ~ amountIn:', amountIn);
+      console.log('🚀 ~ KyberProvider ~ getQuote ~ sourceToken:', sourceToken);
+      console.log('🚀 ~ KyberProvider ~ getQuote ~ destinationToken:', destinationToken);
+      console.log('🚀 ~ KyberProvider ~ getQuote ~ userAddress:', userAddress);
       // Get swap route and transaction data
       const { routeData, transactionData } = await this.callKyberApi(
         amountIn,

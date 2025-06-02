@@ -159,6 +159,46 @@ export const defaultTokens: Partial<Record<NetworkName, Record<string, TokenInfo
     },
   },
 
+  // Base tokens
+  [NetworkName.BASE]: {
+    // ETH - Native token
+    '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee': {
+      address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+      symbol: 'ETH',
+      name: 'Ethereum',
+      decimals: 18,
+      network: NetworkName.BASE,
+      verified: true,
+    },
+    // WETH
+    '0x4200000000000000000000000000000000000006': {
+      address: '0x4200000000000000000000000000000000000006',
+      symbol: 'WETH',
+      name: 'Wrapped Ethereum',
+      decimals: 18,
+      network: NetworkName.BASE,
+      verified: true,
+    },
+    // USDC
+    '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913': {
+      address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      network: NetworkName.BASE,
+      verified: true,
+    },
+    // USDT
+    '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2': {
+      address: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2',
+      symbol: 'USDT',
+      name: 'USDT Coin',
+      decimals: 6,
+      network: NetworkName.BASE,
+      verified: true,
+    },
+  },
+
   // Solana tokens
   [NetworkName.SOLANA]: {
     // SOL - Native token
