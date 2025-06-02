@@ -222,7 +222,7 @@ async function main() {
   console.log('💱 Example 1: Buy with exact input amount all providers');
   const result1 = await agent.execute({
     input: `
-        swap 0.01 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee to 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 on base by kyber.
+        swap 1 USDC to 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee on base by kyber.
     `,
   });
   console.log('✓ Result:', result1, '\n');

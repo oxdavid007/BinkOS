@@ -188,6 +188,15 @@ export const defaultTokens: Partial<Record<NetworkName, Record<string, TokenInfo
       network: NetworkName.BASE,
       verified: true,
     },
+    // USDT
+    '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2': {
+      address: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2',
+      symbol: 'USDT',
+      name: 'USDT Coin',
+      decimals: 6,
+      network: NetworkName.BASE,
+      verified: true,
+    },
   },
 
   // Solana tokens
