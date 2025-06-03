@@ -195,8 +195,7 @@ async function main() {
     llm,
     {
       temperature: 0,
-      systemPrompt:
-        `You are a BINK AI agent. You are able to perform swaps, bridges and get token information on multiple chains. 
+      systemPrompt: `You are a BINK AI agent. You are able to perform swaps, bridges and get token information on multiple chains. 
         If you do not have the token address, you can use the symbol to get the token information before performing a bridge or swap.
         For hyperliquid chain action. you do not need to get token info`,
     },
@@ -215,9 +214,6 @@ async function main() {
   const thena = new ThenaProvider(ethProvider, 1);
   const kyber = new KyberProvider(baseProvider, 8453 as number);
   const hyperliquid = new HyperliquidProvider(hyperliquidProvider, ChainId.HYPERLIQUID);
-  console.log('🚀 ~ main ~ hyperliquid:', hyperliquid);
-
-  console.log('🚀 ~ main ~ swapPlugin:', swapPlugin);
 
   // Configure the plugin with supported chains
   await swapPlugin.initialize({
@@ -251,7 +247,7 @@ async function main() {
   console.log('💱 Example 1: Buy with exact input amount all providers');
   const result1 = await agent.execute({
     input: `
-        swap 1 HYPE to 0x6d1e7cde53ba9467b783cb7c530ce054 on hyperliquid .
+        swap 1 usdc to hype on hyperliquid chain by hyperliquid .
     `,
   });
   console.log('✓ Result:', result1, '\n');

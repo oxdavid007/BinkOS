@@ -130,6 +130,9 @@ export abstract class BaseSwapProvider implements ISwapProvider {
    */
   protected getGasBuffer(network: NetworkName): bigint {
     const buffer = this.GAS_BUFFERS[network];
+    if (network === NetworkName.HYPERLIQUID) {
+      return BigInt(0);
+    }
     if (!buffer) {
       throw new Error(`No gas buffer defined for network ${network}`);
     }
