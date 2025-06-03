@@ -107,8 +107,7 @@ export class GetTokenInfoTool extends BaseTool {
     return z.object({
       query: z.string().describe('The token address or symbol to query'),
       network: z
-        .enum(['bnb', 'solana', 'ethereum', 'arbitrum', 'base', 'optimism', 'polygon', 'null'])
-        .default('null')
+        .enum(['bnb', 'solana', 'ethereum', 'arbitrum', 'base', 'optimism', 'polygon', 'hyperliquid', 'null'])
         .describe('The blockchain network to query the token on'),
       provider: z
         .enum(providers as [string, ...string[]])
@@ -403,6 +402,66 @@ export class GetTokenInfoTool extends BaseTool {
     return /^[0-9a-zA-Z]{32,44}$/.test(query);
   }
 
+  /* 
+  Search token info by hyperliquid api
+  Input: Query + Network 
+  Query: symbol/address
+  Network: NetworkName
+  */
+  async findHyperLiquidToken(query: string, network: NetworkName): Promise<TokenInfo> {
+    try {
+      
+      const response = await fetch('https://api-ui.hyperliquid.xyz/info', {
+        method: 'POST',
+        headers: {
+          'Accept': '*/*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Connection': 'keep-alive',
+          'Content-Type': 'application/json',
+          'Origin': 'https://app.hyperliquid.xyz',
+          'Referer': 'https://app.hyperliquid.xyz/',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-site',
+          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+          'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Linux"'
+        },
+        body: JSON.stringify({
+          type: 'spotMeta'
+        })
+      });
+
+      const parseResponse = await response.json();
+      const allTokens = parseResponse.tokens;
+
+
+      const hyperTokenInfo = allTokens.find(
+        (t: any) =>
+          t.name?.toLowerCase() === query.toLowerCase() ||
+          t.tokenId?.toLowerCase() === query.toLowerCase()
+      );
+
+
+      const tokenInfo: TokenInfo = {
+        address: hyperTokenInfo.tokenId || '',
+        symbol: hyperTokenInfo.name,
+        name: hyperTokenInfo.fullName || hyperTokenInfo.name,
+        decimals: hyperTokenInfo.weiDecimals,
+        network: network as NetworkName,
+      }
+
+      return tokenInfo as TokenInfo;
+      
+
+    } catch (error) {
+      console.error(`Error in findToken in  hyperliquid provider: ${error}`);
+      throw error;
+    }
+  }
+
+
   createTool(): CustomDynamicStructuredTool {
     logger.info('🛠️ Creating token info tool');
     return {
@@ -420,6 +479,44 @@ export class GetTokenInfoTool extends BaseTool {
 
           logger.info(`🔍 Searching for token "${query}" on ${network} network`);
           logger.info('📋 Token Tool Args:', args);
+
+          // Special handling for hyperliquid network
+          if (network === 'hyperliquid') {
+            logger.info('🔥 Using Hyperliquid API for token search');
+            onProgress?.({
+              progress: 50,
+              message: `Searching for token "${query}" on Hyperliquid network.`,
+            });
+
+            try {
+              const tokenInfo = await this.findHyperLiquidToken(query, network);
+              logger.info(`✅ Found token info from Hyperliquid API: ${tokenInfo.symbol}`);
+
+              onProgress?.({
+                progress: 100,
+                message: `Successfully retrieved information for ${tokenInfo.name || tokenInfo.symbol || query} from Hyperliquid.`,
+              });
+
+              return JSON.stringify({
+                status: 'success',
+                data: tokenInfo,
+                provider: 'hyperliquid',
+                network,
+              });
+            } catch (error: any) {
+              logger.error(`❌ Could not find token "${query}" on Hyperliquid`);
+              throw this.createError(
+                ErrorStep.TOKEN_NOT_FOUND,
+                `Could not find token "${query}" on Hyperliquid network.`,
+                {
+                  query: query,
+                  network: network,
+                  provider: 'hyperliquid',
+                  error: error instanceof Error ? error.message : String(error),
+                },
+              );
+            }
+          }
 
           // check if query is an address
           const isAddress = this.isAddress(query);
@@ -557,6 +654,8 @@ export class GetTokenInfoTool extends BaseTool {
           if (tokenInfo?.price?.usd) {
             tokenInfo.price.usd = roundNumber(tokenInfo?.price?.usd, 6);
           }
+
+
           tokenInfo.priceChange24h = roundNumber(tokenInfo?.priceChange24h, 2);
           tokenInfo.volume24h = roundNumber(tokenInfo?.volume24h, 0);
           tokenInfo.marketCap = roundNumber(tokenInfo?.marketCap, 0);

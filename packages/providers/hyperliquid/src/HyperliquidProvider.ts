@@ -1,7 +1,7 @@
 import { SwapQuote, SwapParams, BaseSwapProvider, NetworkProvider } from '@binkai/swap-plugin';
 import { ethers, Provider } from 'ethers';
 import { EVM_NATIVE_TOKEN_ADDRESS, NetworkName, Token, logger } from '@binkai/core';
-import { TokenQueryParams, TokenInfo } from '@binkai/token-plugin';
+import { TokenInfo } from '@binkai/token-plugin';
 
 // Core system constants
 const CONSTANTS = {
@@ -56,64 +56,7 @@ export class HyperliquidProvider extends BaseSwapProvider {
   }
 
 
-  /* 
-  Search token info by hyperliquid api
-  Input: Query + Network 
-  Query: symbol/address
-  Network: NetworkName
-  */
-  async findToken(query: string, network: NetworkName): Promise<TokenInfo> {
-    try {
-      
-      const response = await fetch('https://api-ui.hyperliquid.xyz/info', {
-        method: 'POST',
-        headers: {
-          'Accept': '*/*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Connection': 'keep-alive',
-          'Content-Type': 'application/json',
-          'Origin': 'https://app.hyperliquid.xyz',
-          'Referer': 'https://app.hyperliquid.xyz/',
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'same-site',
-          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
-          'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
-          'sec-ch-ua-mobile': '?0',
-          'sec-ch-ua-platform': '"Linux"'
-        },
-        body: JSON.stringify({
-          type: 'spotMeta'
-        })
-      });
-
-      const parseResponse = await response.json();
-      const allTokens = parseResponse.tokens;
-
-
-      const hyperTokenInfo = allTokens.find(
-        (t: any) =>
-          t.name?.toLowerCase() === query.toLowerCase() ||
-          t.tokenId?.toLowerCase() === query.toLowerCase()
-      );
-
-
-      const tokenInfo: TokenInfo = {
-        address: hyperTokenInfo.tokenId || '',
-        symbol: hyperTokenInfo.name,
-        name: hyperTokenInfo.fullName || hyperTokenInfo.name,
-        decimals: hyperTokenInfo.weiDecimals,
-        network: network as NetworkName,
-      }
-
-      return tokenInfo as TokenInfo;
-      
-
-    } catch (error) {
-      console.error(`Error in findToken in  hyperliquid provider: ${error}`);
-      throw error;
-    }
-  }
+  
 
 
   private async callHyperliquidApi(
@@ -172,19 +115,11 @@ export class HyperliquidProvider extends BaseSwapProvider {
         throw new Error('Hyperliquid does not support limit order for native token swaps');
       }
 
-      // Fetch input and output token information
-      // const [sourceToken, destinationToken] = await Promise.all([
-      //   this.getToken(params.fromToken, params.network),
-      //   this.getToken(params.toToken, params.network),
-      // ]);
-
-
-      let sourceToken, destinationToken;
-
-      [sourceToken, destinationToken] = await Promise.all([
-        await this.findToken(params.fromToken, params.network),
-        await this.findToken(params.toToken, params.network),
+      const [sourceToken, destinationToken] = await Promise.all([
+        this.getToken(params.fromToken, params.network),
+        this.getToken(params.toToken, params.network),
       ]);
+
 
 
       let adjustedAmount = params.amount;
