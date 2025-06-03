@@ -196,7 +196,9 @@ async function main() {
     {
       temperature: 0,
       systemPrompt:
-        'You are a BINK AI agent. You are able to perform swaps, bridges and get token information on multiple chains. If you do not have the token address, you can use the symbol to get the token information before performing a bridge or swap.',
+        `You are a BINK AI agent. You are able to perform swaps, bridges and get token information on multiple chains. 
+        If you do not have the token address, you can use the symbol to get the token information before performing a bridge or swap.
+        For hyperliquid chain action. you do not need to get token info`,
     },
     wallet,
     networks,
@@ -249,7 +251,7 @@ async function main() {
   console.log('💱 Example 1: Buy with exact input amount all providers');
   const result1 = await agent.execute({
     input: `
-        swap 1 usdc to hyper on hyperliquid by hyperliquid .
+        swap 1 HYPE to 0x6d1e7cde53ba9467b783cb7c530ce054 on hyperliquid .
     `,
   });
   console.log('✓ Result:', result1, '\n');
