@@ -92,6 +92,8 @@ export const CHAIN_MAPPING = {
   [NetworkName.POLYGON]: 'polygon',
   [NetworkName.ARBITRUM]: 'arbitrum',
   [NetworkName.OPTIMISM]: 'optimism',
+  [NetworkName.HYPERLIQUID]: 'hyperliquid',
+  [NetworkName.BASE]: 'base',
   // Add more chains as they become supported
 } as const;
 

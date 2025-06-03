@@ -104,14 +104,14 @@ export class SwapTool extends BaseTool {
     }
 
     return z.object({
-      fromToken: z.string().describe(`The adress of source token on network. (spend)`),
-      toToken: z.string().describe(`The adress of destination token on network. (receive)`),
+      fromToken: z.string().describe(`The address of source token on network. (spend)`),
+      toToken: z.string().describe(`The address of destination token on network. (receive)`),
       amount: z.string().describe('The amount of tokens to swap'),
       limitPrice: z.number().default(0).describe('The price at which to place a limit order'),
       amountType: z
         .enum(['input', 'output'])
         .describe('Whether the amount is input (spend) or output (receive)'),
-      network: z.enum(['bnb', 'solana', 'ethereum', 'base', 'null'])
+      network: z.enum(['bnb', 'solana', 'ethereum', 'base', 'hyperliquid', 'null'])
         .describe(`Determine blockchain network from user input. 
         Priority rules:
           1. Use explicitly mentioned network

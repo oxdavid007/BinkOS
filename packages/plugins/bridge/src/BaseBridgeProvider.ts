@@ -39,6 +39,7 @@ export abstract class BaseBridgeProvider implements IBridgeProvider {
     [NetworkName.SEPOLIA]: ethers.parseEther('0.001'), // 0.001 ETH
     [NetworkName.SOLANA_DEVNET]: BigInt(40000000), // 0.04 SOL in lamports
     [NetworkName.BASE]: ethers.parseEther('0.005'), // 0.001 ETH
+    [NetworkName.HYPERLIQUID]: ethers.parseEther('0'), // 0 USDC
   };
 
   constructor(providerConfig: Map<NetworkName, NetworkProvider>) {

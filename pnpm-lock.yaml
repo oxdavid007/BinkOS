@@ -60,6 +60,9 @@ importers:
       '@binkai/four-meme-provider':
         specifier: workspace:*
         version: link:../../packages/providers/four-meme
+      '@binkai/hyperliquid-provider':
+        specifier: workspace:*
+        version: link:../../packages/providers/hyperliquid
       '@binkai/image-plugin':
         specifier: workspace:*
         version: link:../../packages/plugins/image
@@ -615,6 +618,34 @@ importers:
         specifier: ^6.13.5
         version: 6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.17.14
+      rimraf:
+        specifier: ^5.0.0
+        version: 5.0.10
+      typescript:
+        specifier: ^5.0.0
+        version: 5.7.3
+
+  packages/providers/hyperliquid:
+    dependencies:
+      '@binkai/core':
+        specifier: workspace:*
+        version: link:../../core
+      '@binkai/swap-plugin':
+        specifier: workspace:*
+        version: link:../../plugins/swap
+      crypto-js:
+        specifier: ^4.1.1
+        version: 4.2.0
+      ethers:
+        specifier: ^6.0.0
+        version: 6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+    devDependencies:
+      '@types/crypto-js':
+        specifier: ^4.2.2
+        version: 4.2.2
       '@types/node':
         specifier: ^20.0.0
         version: 20.17.14
@@ -11998,7 +12029,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.7.9)
+      retry-axios: 2.6.0(axios@1.7.9(debug@4.4.0))
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -13952,7 +13983,7 @@ snapshots:
       onetime: 7.0.0
       signal-exit: 4.1.0
 
-  retry-axios@2.6.0(axios@1.7.9):
+  retry-axios@2.6.0(axios@1.7.9(debug@4.4.0)):
     dependencies:
       axios: 1.7.9(debug@4.4.0)
 

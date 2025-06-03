@@ -47,6 +47,7 @@ export abstract class BaseStakingProvider implements IStakingProvider {
     [NetworkName.SEPOLIA]: ethers.parseEther('0.001'), // 0.001 ETH
     [NetworkName.SOLANA_DEVNET]: BigInt(10000000), // 0.001 SOL in lamports
     [NetworkName.BASE]: ethers.parseEther('0.0005'), // 0.0005 ETH
+    [NetworkName.HYPERLIQUID]: ethers.parseEther('0'), // 0 USDC
   };
 
   constructor(providerConfig: Map<NetworkName, NetworkProvider>) {

@@ -8,6 +8,7 @@ export enum NetworkName {
   SEPOLIA = 'sepolia',
   SOLANA_DEVNET = 'solana-devnet',
   BASE = 'base',
+  HYPERLIQUID = 'hyperliquid',
 }
 
 export interface BaseNetworkConfig {
