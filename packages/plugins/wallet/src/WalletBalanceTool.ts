@@ -223,6 +223,21 @@ export class GetWalletBalanceTool extends BaseTool {
             );
           }
 
+          
+
+          // STEP 2: Get wallet address
+          try {
+            // If no address provided, get it from the agent's wallet
+            if (!address) {
+              logger.info('🔑 No address provided, using agent wallet');
+              address = await this.agent.getWallet().getAddress(network);
+              logger.info(`🔑 Using agent wallet address: ${address}`);
+            }
+          } catch (error) {
+            logger.error(`❌ Failed to get wallet address for network ${network}`);
+            throw error;
+          }
+
           if (network === 'hyperliquid') {
             onProgress?.({
               progress: 50,
@@ -244,18 +259,7 @@ export class GetWalletBalanceTool extends BaseTool {
             });
           }
 
-          // STEP 2: Get wallet address
-          try {
-            // If no address provided, get it from the agent's wallet
-            if (!address) {
-              logger.info('🔑 No address provided, using agent wallet');
-              address = await this.agent.getWallet().getAddress(network);
-              logger.info(`🔑 Using agent wallet address: ${address}`);
-            }
-          } catch (error) {
-            logger.error(`❌ Failed to get wallet address for network ${network}`);
-            throw error;
-          }
+
 
           onProgress?.({
             progress: 20,

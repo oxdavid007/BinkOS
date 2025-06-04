@@ -16,22 +16,22 @@ import {
   AskUserData,
   IAskUserCallback,
   OpenAIModel,
+  logger,
 } from '@binkai/core';
 import { SwapPlugin } from '@binkai/swap-plugin';
-import { PancakeSwapProvider } from '@binkai/pancakeswap-provider';
-// import { OkxProvider } from '@binkai/okx-provider';
+import { OkxProvider } from '@binkai/okx-provider';
+import { ThenaProvider } from '@binkai/thena-provider';
+import { JupiterProvider } from '@binkai/jupiter-provider';
+import { Connection } from '@solana/web3.js';
 import { TokenPlugin } from '@binkai/token-plugin';
 import { BirdeyeProvider } from '@binkai/birdeye-provider';
 import { WalletPlugin } from '@binkai/wallet-plugin';
 import { BnbProvider } from '@binkai/rpc-provider';
-// import { FourMemeProvider } from '@binkai/four-meme-provider';
+import { KyberProvider } from '@binkai/kyber-provider';
+import { AlchemyProvider } from '@binkai/alchemy-provider';
+import { HyperliquidProvider } from '@binkai/hyperliquid-provider';
 import { BridgePlugin } from '@binkai/bridge-plugin';
 import { deBridgeProvider } from '@binkai/debridge-provider';
-import { JupiterProvider } from '@binkai/jupiter-provider';
-import { Connection } from '@solana/web3.js';
-import { AlchemyProvider } from '@binkai/alchemy-provider';
-import { ThenaProvider } from '@binkai/thena-provider';
-
 import { KnowledgePlugin } from '@binkai/knowledge-plugin';
 import { BinkProvider } from '@binkai/bink-provider';
 import { ImagePlugin } from '@binkai/image-plugin';
@@ -40,6 +40,8 @@ import { ImagePlugin } from '@binkai/image-plugin';
 const BNB_RPC = 'https://bsc-dataseed1.binance.org';
 const ETH_RPC = 'https://eth.llamarpc.com';
 const SOL_RPC = 'https://api.mainnet-beta.solana.com';
+const BASE_RPC = 'https://base.llamarpc.com';
+const HYPERLIQUID_RPC = 'https://rpc.hyperliquid.xyz/evm';
 
 // Example callback implementation
 class ExampleToolExecutionCallback implements IToolExecutionCallback {
@@ -84,7 +86,7 @@ class ExampleAskUserCallback implements IAskUserCallback {
 }
 
 async function main() {
-  console.log('🚀 Starting BinkOS swap example...\n');
+  console.log('🚀 Starting BinkOS planning example...\n');
 
   // Check required environment variables
   if (!settings.has('OPENAI_API_KEY')) {
@@ -94,9 +96,24 @@ async function main() {
 
   console.log('🔑 OpenAI API key found\n');
 
+  //configure enable logger
+  logger.enable();
+
   // Define available networks
   console.log('📡 Configuring networks...');
   const networks: NetworksConfig['networks'] = {
+    [NetworkName.SOLANA]: {
+      type: 'solana' as NetworkType,
+      config: {
+        rpcUrl: SOL_RPC,
+        name: 'Solana',
+        nativeCurrency: {
+          name: 'Solana',
+          symbol: 'SOL',
+          decimals: 9,
+        },
+      },
+    },
     [NetworkName.BNB]: {
       type: 'evm' as NetworkType,
       config: {
@@ -123,15 +140,29 @@ async function main() {
         },
       },
     },
-    [NetworkName.SOLANA]: {
-      type: 'solana' as NetworkType,
+    [NetworkName.BASE]: {
+      type: 'evm' as NetworkType,
       config: {
-        rpcUrl: SOL_RPC,
-        name: 'Solana',
+        chainId: 8453,
+        rpcUrl: BASE_RPC,
+        name: 'Base',
         nativeCurrency: {
-          name: 'Solana',
-          symbol: 'SOL',
-          decimals: 9,
+          name: 'Ether',
+          symbol: 'ETH',
+          decimals: 18,
+        },
+      },
+    },
+    [NetworkName.HYPERLIQUID]: {
+      type: 'evm' as NetworkType,
+      config: {
+        chainId: 999,
+        rpcUrl: HYPERLIQUID_RPC,
+        name: 'Hyperliquid',
+        nativeCurrency: {
+          name: 'Hyperliquid',
+          symbol: 'HYPE',
+          decimals: 18,
         },
       },
     },
@@ -143,10 +174,14 @@ async function main() {
   const network = new Network({ networks });
   console.log('✓ Network initialized\n');
 
-  // Initialize provider
-  console.log('🔌 Initializing provider...');
-  const provider = new ethers.JsonRpcProvider(BNB_RPC);
-  console.log('✓ Provider initialized\n');
+  // Initialize providers
+  console.log('🔌 Initializing providers...');
+  const bnbProvider = new ethers.JsonRpcProvider(BNB_RPC);
+  const solProvider = new Connection(SOL_RPC);
+  const ethProvider = new ethers.JsonRpcProvider(ETH_RPC);
+  const baseProvider = new ethers.JsonRpcProvider(BASE_RPC);
+  const hyperliquidProvider = new ethers.JsonRpcProvider(HYPERLIQUID_RPC);
+  console.log('✓ Providers initialized\n');
 
   // Initialize a new wallet
   console.log('👛 Creating wallet...');
@@ -164,6 +199,9 @@ async function main() {
   console.log('🤖 Wallet BNB:', await wallet.getAddress(NetworkName.BNB));
   console.log('🤖 Wallet ETH:', await wallet.getAddress(NetworkName.ETHEREUM));
   console.log('🤖 Wallet SOL:', await wallet.getAddress(NetworkName.SOLANA));
+  console.log('🤖 Wallet BASE:', await wallet.getAddress(NetworkName.BASE));
+  console.log('🤖 Wallet HYPERLIQUID:', await wallet.getAddress(NetworkName.HYPERLIQUID));
+
   // Create an agent with OpenAI
   console.log('🤖 Initializing AI agent...');
   const llm = new OpenAIModel({
@@ -175,133 +213,116 @@ async function main() {
     {
       isHumanReview: true,
       temperature: 0,
-      systemPrompt:
-        'You are a BINK AI agent. You are able to perform swaps, bridges and get token information on multiple chains. If you do not have the token address, you can use the symbol to get the token information before performing a bridge or swap.',
+      systemPrompt: `You are a BINK AI agent. You are able to perform swaps, bridges and get token information on multiple chains. 
+        If you do not have the token address, you can use the symbol to get the token information before performing a bridge or swap.`,
     },
     wallet,
     networks,
   );
   console.log('✓ Agent initialized\n');
 
-  const solanaProvider = new Connection(SOL_RPC);
-
-  // Register the tool execution callback
-  console.log('🔔 Registering tool execution callback...');
+  // Register callbacks
+  console.log('🔔 Registering callbacks...');
   agent.registerToolExecutionCallback(new ExampleToolExecutionCallback());
   agent.registerHumanReviewCallback(new ExampleHumanReviewCallback());
   agent.registerAskUserCallback(new ExampleAskUserCallback());
-  console.log('✓ Callback registered\n');
+  console.log('✓ Callbacks registered\n');
 
-  // Create and configure the swap plugin
-  console.log('🔄 Initializing swap plugin...');
-  const swapPlugin = new SwapPlugin();
-
-  console.log('🔄 Initializing bridge plugin...');
-  const bridgePlugin = new BridgePlugin();
-
-  console.log('🔍 Initializing token plugin...');
-  const tokenPlugin = new TokenPlugin();
-
-  // Create Birdeye provider with API key
+  // Initialize providers for plugins
   const birdeye = new BirdeyeProvider({
     apiKey: settings.get('BIRDEYE_API_KEY'),
   });
 
-  const thena = new ThenaProvider(provider, 56);
-  const alchemy = new AlchemyProvider({
+  const alchemyProvider = new AlchemyProvider({
     apiKey: settings.get('ALCHEMY_API_KEY'),
   });
 
-  // Create and configure the wallet plugin
-  console.log('🔄 Initializing wallet plugin...');
-  const walletPlugin = new WalletPlugin();
-  // Create provider with API key
-  const bnbProvider = new BnbProvider({
+  const bnbProviderOS = new BnbProvider({
     rpcUrl: BNB_RPC,
   });
-
-  // Initialize plugin with provider
-  await walletPlugin.initialize({
-    providers: [bnbProvider, birdeye, alchemy],
-    supportedChains: ['bnb', 'solana'],
-  });
-  // Configure the plugin with supported chains
-  await tokenPlugin.initialize({
-    providers: [birdeye, alchemy],
-    supportedChains: ['solana', 'bnb'],
-  });
-  console.log('✓ Token plugin initialized\n');
-
-  // Create providers with proper chain IDs
-  const pancakeswap = new PancakeSwapProvider(provider, 56);
-  // Create providers with proper chain IDs
-  const jupiter = new JupiterProvider(solanaProvider);
-
-  // const okx = new OkxProvider(provider, 56);
-
-  // const fourMeme = new FourMemeProvider(provider, 56);
 
   const binkProvider = new BinkProvider({
     apiKey: settings.get('BINK_API_KEY') || '',
     baseUrl: settings.get('BINK_API_URL') || '',
     imageApiUrl: settings.get('BINK_IMAGE_API_URL') || '',
   });
-  // Initialize plugin with provider
+
+  // Initialize Token Plugin
+  console.log('🔍 Initializing token plugin...');
+  const tokenPlugin = new TokenPlugin();
+  await tokenPlugin.initialize({
+    providers: [birdeye, alchemyProvider],
+    supportedChains: ['solana', 'bnb', 'ethereum', 'base', 'hyperliquid'],
+  });
+  console.log('✓ Token plugin initialized\n');
+
+  // Initialize Wallet Plugin
+  console.log('🔄 Initializing wallet plugin...');
+  const walletPlugin = new WalletPlugin();
+  await walletPlugin.initialize({
+    providers: [bnbProviderOS, alchemyProvider, birdeye],
+    supportedChains: ['bnb', 'solana', 'base', 'hyperliquid'],
+  });
+  console.log('✓ Wallet plugin initialized\n');
+
+  // Initialize Swap Plugin
+  console.log('🔄 Initializing swap plugin...');
+  const swapPlugin = new SwapPlugin();
+
+  const ChainId = {
+    BSC: 56,
+    ETH: 1,
+    BASE: 8453,
+    HYPERLIQUID: 999,
+  };
+
+  // Create swap providers
+  const okx = new OkxProvider(bnbProvider, 56);
+  const jupiter = new JupiterProvider(solProvider);
+  const thena = new ThenaProvider(ethProvider, 1);
+  const kyber = new KyberProvider(baseProvider, 8453 as number);
+  const hyperliquid = new HyperliquidProvider(hyperliquidProvider, ChainId.HYPERLIQUID);
+
+  await swapPlugin.initialize({
+    defaultSlippage: 0.5,
+    providers: [okx, thena, jupiter, kyber, hyperliquid],
+    supportedChains: ['bnb', 'ethereum', 'solana', 'base', 'hyperliquid'],
+  });
+  console.log('✓ Swap plugin initialized\n');
+
+  // Initialize Bridge Plugin
+  console.log('🔄 Initializing bridge plugin...');
+  const bridgePlugin = new BridgePlugin();
+  const debridge = new deBridgeProvider([bnbProvider, solProvider], 56, 7565164);
+
+  await bridgePlugin.initialize({
+    providers: [debridge],
+    supportedChains: ['bnb', 'solana', 'base'],
+  });
+  console.log('✓ Bridge plugin initialized\n');
+
+  // Initialize Knowledge Plugin
+  console.log('🔄 Initializing knowledge plugin...');
   const knowledgePlugin = new KnowledgePlugin();
   await knowledgePlugin.initialize({
     providers: [binkProvider],
   });
+  console.log('✓ Knowledge plugin initialized\n');
 
-  // Configure the plugin with supported chains
-  await swapPlugin.initialize({
-    providers: [pancakeswap, jupiter, thena],
-    supportedChains: ['bnb', 'ethereum', 'solana'], // These will be intersected with agent's networks
-  });
-  console.log('✓ Swap plugin initialized\n');
-
-  // Create providers with proper chain IDs
-  const debridge = new deBridgeProvider([provider, solanaProvider]);
-
+  // Initialize Image Plugin
+  console.log('🔄 Initializing image plugin...');
   const imagePlugin = new ImagePlugin();
-  // Configure the plugin with supported chains
-  await bridgePlugin.initialize({
-    providers: [debridge],
-    supportedChains: ['bnb', 'solana'], // These will be intersected with agent's networks
-  });
-
   await imagePlugin.initialize({
     providers: [binkProvider],
     supportedChains: ['bnb'],
   });
-  console.log('✓ Token plugin initialized\n');
+  console.log('✓ Image plugin initialized\n');
 
-  // Register the plugin with the agent
-  console.log('🔌 Registering token plugin with agent...');
-  await agent.registerPlugin(imagePlugin);
-  console.log('✓ Plugin registered\n');
-
-  console.log('✓ Bridge plugin initialized\n');
-
-  // Register the plugin with the agent
-  console.log('🔌 Registering swap plugin with agent...');
-  await agent.registerPlugin(swapPlugin);
-  console.log('✓ Plugin registered\n');
-
-  console.log('🔌 Registering wallet plugin with agent...');
+  // Register plugins with agent
+  console.log('🔌 Registering plugins with agent...');
   await agent.registerPlugin(walletPlugin);
-  console.log('✓ Plugin registered\n');
-
-  console.log('🔌 Registering token plugin with agent...');
-  await agent.registerPlugin(tokenPlugin);
-  console.log('✓ Plugin registered\n');
-
-  console.log('🔌 Registering bridge plugin with agent...');
-  await agent.registerPlugin(bridgePlugin);
-  console.log('✓ Plugin registered\n');
-
-  console.log('🔌 Registering knowledge plugin with agent...');
-  await agent.registerPlugin(knowledgePlugin);
-  console.log('✓ Plugin registered\n');
+  await agent.registerListPlugins([swapPlugin, tokenPlugin, bridgePlugin, knowledgePlugin, imagePlugin]);
+  console.log('✓ All plugins registered\n');
 
   return await agent.graph;
 
