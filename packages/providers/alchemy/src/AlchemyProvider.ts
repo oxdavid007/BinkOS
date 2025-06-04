@@ -92,9 +92,8 @@ export class AlchemyProvider implements ITokenProvider, IWalletProvider {
       logger.info('getTokenInfo alchemy:', params);
 
       const walletInfo = await this.getWalletInfo(params.query, params.network);
-      logger.info('walletInfo:', walletInfo);
 
-      return {} as TokenInfo;
+      return walletInfo as TokenInfo;
     } catch (error) {
       throw new Error('Not implemented');
     }
@@ -136,7 +135,6 @@ export class AlchemyProvider implements ITokenProvider, IWalletProvider {
           params: { wallet: address },
         },
       );
-
       let data;
       if (response.data && response.data.data && response.data.data.tokens) {
         const tokens = response.data.data.tokens;
@@ -157,7 +155,6 @@ export class AlchemyProvider implements ITokenProvider, IWalletProvider {
             };
           });
       }
-
       return {
         address: address,
         nativeBalance: undefined,

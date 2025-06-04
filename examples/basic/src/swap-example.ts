@@ -24,12 +24,14 @@ import { WalletPlugin } from '@binkai/wallet-plugin';
 import { BnbProvider } from '@binkai/rpc-provider';
 import { KyberProvider } from '@binkai/kyber-provider';
 import { AlchemyProvider } from '@binkai/alchemy-provider';
+import { HyperliquidProvider } from '@binkai/hyperliquid-provider';
 
 // Hardcoded RPC URLs for demonstration
 const BNB_RPC = 'https://bsc-dataseed1.binance.org';
 const ETH_RPC = 'https://eth.llamarpc.com';
 const SOL_RPC = 'https://api.mainnet-beta.solana.com';
 const BASE_RPC = 'https://base.llamarpc.com';
+const HYPERLIQUID_RPC = 'https://rpc.hyperliquid.xyz/evm';
 
 async function main() {
   console.log('🚀 Starting BinkOS swap example...\n');
@@ -99,6 +101,19 @@ async function main() {
         },
       },
     },
+    [NetworkName.HYPERLIQUID]: {
+      type: 'evm' as NetworkType,
+      config: {
+        chainId: 999,
+        rpcUrl: HYPERLIQUID_RPC,
+        name: 'Hyperliquid',
+        nativeCurrency: {
+          name: 'Hyperliquid',
+          symbol: 'HYPE',
+          decimals: 18,
+        },
+      },
+    },
   };
   console.log('✓ Networks configured:', Object.keys(networks).join(', '), '\n');
 
@@ -116,7 +131,7 @@ async function main() {
   await tokenPlugin.initialize({
     // defaultChain: 'solana',
     providers: [birdeye, alchemyProvider],
-    supportedChains: ['solana', 'bnb', 'ethereum', 'base'],
+    supportedChains: ['solana', 'bnb', 'ethereum', 'base', 'hyperliquid'],
   });
   console.log('✓ Token plugin initialized\n');
 
@@ -127,18 +142,26 @@ async function main() {
 
   // Initialize provider
   console.log('🔌 Initializing provider...');
-  const bnb_provider = new ethers.JsonRpcProvider(BNB_RPC);
-  const sol_provider = new Connection(SOL_RPC);
-  const eth_provider = new ethers.JsonRpcProvider(ETH_RPC);
-  const base_provider = new ethers.JsonRpcProvider(BASE_RPC);
+  const bnbProvider = new ethers.JsonRpcProvider(BNB_RPC);
+  const solProvider = new Connection(SOL_RPC);
+  const ethProvider = new ethers.JsonRpcProvider(ETH_RPC);
+  const baseProvider = new ethers.JsonRpcProvider(BASE_RPC);
+  const hyperliquidProvider = new ethers.JsonRpcProvider(HYPERLIQUID_RPC);
 
-  const bnbProvider = new BnbProvider({
+  const ChainId = {
+    BSC: 56,
+    ETH: 1,
+    BASE: 8453,
+    HYPERLIQUID: 999,
+  };
+
+  const bnbProviderOS = new BnbProvider({
     rpcUrl: BNB_RPC,
   });
   await walletPlugin.initialize({
     // defaultChain: 'bnb',
-    providers: [bnbProvider, birdeye],
-    supportedChains: ['bnb', 'solana', 'base'],
+    providers: [bnbProviderOS, alchemyProvider, birdeye],
+    supportedChains: ['bnb', 'solana', 'base', 'hyperliquid'],
   });
   console.log('✓ Provider initialized\n');
 
@@ -159,7 +182,7 @@ async function main() {
   console.log('🤖 Wallet ETH:', await wallet.getAddress(NetworkName.ETHEREUM));
   console.log('🤖 Wallet SOL:', await wallet.getAddress(NetworkName.SOLANA));
   console.log('🤖 Wallet BASE:', await wallet.getAddress(NetworkName.BASE));
-
+  console.log('🤖 Wallet HYPERLIQUID:', await wallet.getAddress(NetworkName.HYPERLIQUID));
   // Create an agent with OpenAI
   console.log('🤖 Initializing AI agent...');
 
@@ -172,8 +195,9 @@ async function main() {
     llm,
     {
       temperature: 0,
-      systemPrompt:
-        'You are a BINK AI agent. You are able to perform swaps, bridges and get token information on multiple chains. If you do not have the token address, you can use the symbol to get the token information before performing a bridge or swap.',
+      systemPrompt: `You are a BINK AI agent. You are able to perform swaps, bridges and get token information on multiple chains. 
+        If you do not have the token address, you can use the symbol to get the token information before performing a bridge or swap.
+        For hyperliquid chain action. you do not need to get token info`,
     },
     wallet,
     networks,
@@ -185,24 +209,25 @@ async function main() {
   const swapPlugin = new SwapPlugin();
 
   // Create providers with proper chain IDs
-  const okx = new OkxProvider(bnb_provider, 56);
-  const jupiter = new JupiterProvider(sol_provider);
-  const thena = new ThenaProvider(eth_provider, 1);
-  const kyber = new KyberProvider(base_provider, 8453 as number);
+  const okx = new OkxProvider(bnbProvider, 56);
+  const jupiter = new JupiterProvider(solProvider);
+  const thena = new ThenaProvider(ethProvider, 1);
+  const kyber = new KyberProvider(baseProvider, 8453 as number);
+  const hyperliquid = new HyperliquidProvider(hyperliquidProvider, ChainId.HYPERLIQUID);
 
   // Configure the plugin with supported chains
   await swapPlugin.initialize({
     defaultSlippage: 0.5,
     // defaultChain: 'bnb',
-    providers: [okx, thena, jupiter, kyber],
-    supportedChains: ['bnb', 'ethereum', 'solana', 'base'], // These will be intersected with agent's networks
+    providers: [okx, thena, jupiter, kyber, hyperliquid],
+    supportedChains: ['bnb', 'ethereum', 'solana', 'base', 'hyperliquid'], // These will be intersected with agent's networks
   });
 
   console.log('✓ Swap plugin initialized\n');
 
   const bridgePlugin = new BridgePlugin();
 
-  const debridge = new deBridgeProvider([bnb_provider, sol_provider], 56, 7565164);
+  const debridge = new deBridgeProvider([bnbProvider, solProvider], 56, 7565164);
 
   // Configure the plugin with supported chains
   await bridgePlugin.initialize({
@@ -219,25 +244,38 @@ async function main() {
   console.log('✓ Plugin registered\n');
 
   // Example 1: Buy with exact input amount on BNB Chain
-  console.log('💱 Example 1: Buy with exact input amount all providers');
-  const result1 = await agent.execute({
-    input: `
-        swap 1 USDC to 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee on base by kyber.
-    `,
-  });
-  console.log('✓ Result:', result1, '\n');
+  // console.log('💱 Example 1: Buy with exact input amount all providers');
+  // const result = await agent.execute({
+  //   input: `
+  //     Buy 0.3 hype from usdc on hyperliquid chain by hyperliquid .
+  //     Use the following token addresses:
+  //       HYPE: 0x0d01dc56dcaaca66ad901c959b4011ec
+  //       USDC: 0x6d1e7cde53ba9467b783cb7c530ce054
+  //   `,
+  // });
+  // console.log('✓ Result:', result, '\n');
 
-  // Example 2: Sell with exact output amount on BNB Chain
-  // console.log('💱 Example 2: Sell with exact output amount on BNB Chain');
+  //  Example 2: Sell with exact output amount on Hyperliquid Chain
+  // console.log('💱 Example 2: Sell with exact output amount on Hyperliquid Chain');
   // const result2 = await agent.execute({
   //   input: `
-  //     Sell 100 BINK to BNB by Oku.
+  //     Sell 0.3 hype to usdc on hyperliquid chain by hyperliquid .
   //     Use the following token addresses:
-  //      BINK: 0x5fdfaFd107Fc267bD6d6B1C08fcafb8d31394ba1
+  //      HYPE: 0x0d01dc56dcaaca66ad901c959b4011ec
+  //      USDC: 0x6d1e7cde53ba9467b783cb7c530ce054
   //   `,
   // });
 
   // console.log('✓ Swap result:', result2, '\n');
+
+  // Example 3 : Check my balance on base chain
+  console.log('💱 Example 3: Check my balance on base chain');
+  const result = await agent.execute({
+    input: `
+      Check my balance on hyperliquid chain
+    `,
+  });
+  console.log('✓ Result:', result, '\n');
 
   // Get plugin information
   const registeredPlugin = agent.getPlugin('swap') as SwapPlugin;

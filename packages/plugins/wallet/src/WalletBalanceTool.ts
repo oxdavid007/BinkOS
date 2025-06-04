@@ -11,7 +11,7 @@ import {
   logger,
 } from '@binkai/core';
 import { ProviderRegistry } from './ProviderRegistry';
-import { IWalletProvider, WalletInfo } from './types';
+import { IWalletProvider, WalletBalance, WalletInfo } from './types';
 import { defaultTokens } from '@binkai/token-plugin';
 
 export interface WalletToolConfig extends IToolConfig {
@@ -117,7 +117,7 @@ export class GetWalletBalanceTool extends BaseTool {
           "The wallet address to query. If not provided, the agent's wallet address will be used automatically.",
         ),
       network: z
-        .enum(['bnb', 'solana', 'ethereum'])
+        .enum(['bnb', 'solana', 'ethereum', 'hyperliquid', 'base'])
         .optional()
         .describe('The blockchain network to query the wallet on.'),
     });
@@ -142,6 +142,56 @@ export class GetWalletBalanceTool extends BaseTool {
     return results;
   }
 
+  private async fetchHyperliquidBalance(userAddress: string): Promise<WalletInfo> {
+    const url = 'https://api-ui.hyperliquid.xyz/info';
+    const payload = {
+      type: 'spotClearinghouseState',
+      user: userAddress,
+    };
+
+    try {
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Hyperliquid API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`HTTP error! Status: ${response.status}, Body: ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      // Convert Hyperliquid response to WalletInfo format
+      const tokens: WalletBalance[] = data.balances?.map((balance: any) => ({
+        symbol: balance.coin,
+        balance: balance.total,
+        name: balance.coin,
+        tokenAddress: balance.token?.toString(),
+      })) || [];
+
+      const walletInfo: WalletInfo = {
+        address: userAddress,
+        tokens: tokens,
+      };
+
+      return walletInfo;
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      throw error;
+    }
+  }
+
   createTool(): CustomDynamicStructuredTool {
     logger.info('🛠️ Creating wallet balance tool');
     return {
@@ -160,7 +210,7 @@ export class GetWalletBalanceTool extends BaseTool {
           logger.info(`🔍 Getting wallet balance for ${address || 'agent wallet'} on ${network}`);
 
           // STEP 1: Validate network
-          const supportedNetworks = this.getSupportedNetworks();
+          const supportedNetworks = [...this.getSupportedNetworks(), 'hyperliquid'];
           if (!supportedNetworks.includes(network)) {
             logger.error(`❌ Network ${network} is not supported`);
             throw this.createError(
@@ -171,6 +221,27 @@ export class GetWalletBalanceTool extends BaseTool {
                 supportedNetworks: supportedNetworks,
               },
             );
+          }
+
+          if (network === 'hyperliquid') {
+            onProgress?.({
+              progress: 50,
+              message: `Retrieving hyperliquid balance for ${address}`,
+            });
+            
+            const hyperliquidBalance = await this.fetchHyperliquidBalance(address);
+            
+            onProgress?.({
+              progress: 100,
+              message: `Successfully retrieved hyperliquid balance for ${address}`,
+            });
+
+            return JSON.stringify({
+              status: 'success',
+              data: hyperliquidBalance,
+              network,
+              address,
+            });
           }
 
           // STEP 2: Get wallet address

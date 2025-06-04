@@ -53,6 +53,7 @@ export abstract class BaseSwapProvider implements ISwapProvider {
     [NetworkName.SEPOLIA]: ethers.parseEther('0.001'), // 0.001 ETH
     [NetworkName.SOLANA_DEVNET]: BigInt(1000000), // 0.001 SOL in lamports
     [NetworkName.BASE]: ethers.parseEther('0.0005'), // 0.0005 ETH
+    [NetworkName.HYPERLIQUID]: ethers.parseEther('0'), // 0 USDC
   };
 
   constructor(providerConfig: Map<NetworkName, NetworkProvider>) {
@@ -129,6 +130,9 @@ export abstract class BaseSwapProvider implements ISwapProvider {
    */
   protected getGasBuffer(network: NetworkName): bigint {
     const buffer = this.GAS_BUFFERS[network];
+    if (network === NetworkName.HYPERLIQUID) {
+      return BigInt(0);
+    }
     if (!buffer) {
       throw new Error(`No gas buffer defined for network ${network}`);
     }
@@ -517,6 +521,17 @@ export abstract class BaseSwapProvider implements ISwapProvider {
         `Failed to build swap transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
+  }
+
+  async buildSendTransaction(quote: SwapQuote, pkWallet: string): Promise<Transaction> {
+    return {
+      to: quote.tx?.to || '',
+      data: quote.tx?.data || '',
+      value: quote.tx?.value || '0',
+      network: quote.network,
+      spender: quote.tx?.to || '',
+      lastValidBlockHeight: quote.tx?.lastValidBlockHeight,
+    };
   }
 
   /**

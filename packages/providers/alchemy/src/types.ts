@@ -91,6 +91,7 @@ export const CHAIN_MAPPING = {
   [NetworkName.POLYGON]: 'matic-mainnet',
   [NetworkName.ARBITRUM]: 'arb-mainnet',
   [NetworkName.OPTIMISM]: 'opt-mainnet',
+  [NetworkName.BASE]: 'base-mainnet',
   // Add more chains as they become supported
 } as const;
 

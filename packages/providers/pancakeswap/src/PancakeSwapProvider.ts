@@ -71,7 +71,7 @@ export class PancakeSwapProvider extends BaseSwapProvider {
   private async getCandidatePools(tokenIn: Currency, tokenOut: Currency) {
     try {
       const v3Pools = await V4Router.getV3CandidatePools({
-        clientProvider: () => this.viemClient,
+        clientProvider: () => this.viemClient as any,
         currencyA: tokenIn,
         currencyB: tokenOut,
       });

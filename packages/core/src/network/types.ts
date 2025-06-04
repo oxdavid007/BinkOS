@@ -8,6 +8,7 @@ export enum NetworkName {
   SEPOLIA = 'sepolia',
   SOLANA_DEVNET = 'solana-devnet',
   BASE = 'base',
+  HYPERLIQUID = 'hyperliquid',
 }
 
 export interface BaseNetworkConfig {
@@ -42,4 +43,7 @@ export interface Token {
   address: string;
   decimals: number;
   symbol: string;
+  price?: string;
+  markPx?: string;
+  szDecimals?: number;
 }

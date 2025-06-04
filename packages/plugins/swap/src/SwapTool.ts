@@ -104,14 +104,14 @@ export class SwapTool extends BaseTool {
     }
 
     return z.object({
-      fromToken: z.string().describe(`The adress of source token on network. (spend)`),
-      toToken: z.string().describe(`The adress of destination token on network. (receive)`),
+      fromToken: z.string().describe(`The address of source token on network. (spend)`),
+      toToken: z.string().describe(`The address of destination token on network. (receive)`),
       amount: z.string().describe('The amount of tokens to swap'),
       limitPrice: z.number().default(0).describe('The price at which to place a limit order'),
       amountType: z
         .enum(['input', 'output'])
         .describe('Whether the amount is input (spend) or output (receive)'),
-      network: z.enum(['bnb', 'solana', 'ethereum', 'base', 'null'])
+      network: z.enum(['bnb', 'solana', 'ethereum', 'base', 'hyperliquid', 'null'])
         .describe(`Determine blockchain network from user input. 
         Priority rules:
           1. Use explicitly mentioned network
@@ -214,8 +214,22 @@ export class SwapTool extends BaseTool {
     }
 
     // STEP 2: Validate token addresses
-    const fromTokenValidation = validateTokenAddress(fromToken, network);
-    const toTokenValidation = validateTokenAddress(toToken, network);
+    let fromTokenValidation, toTokenValidation;
+
+    if (network !== 'hyperliquid') {
+      fromTokenValidation = validateTokenAddress(fromToken, network);
+      args.fromToken = fromTokenValidation.address;
+
+      toTokenValidation = validateTokenAddress(toToken, network);
+      args.toToken = toTokenValidation.address;
+    } else {
+      fromTokenValidation = {
+        isValid: true,
+      };
+      toTokenValidation = {
+        isValid: true,
+      };
+    }
 
     // Process fromToken validation
     if (!fromTokenValidation.isValid) {
@@ -229,7 +243,6 @@ export class SwapTool extends BaseTool {
         },
       );
     }
-    args.fromToken = fromTokenValidation.address;
 
     // Process toToken validation
     if (!toTokenValidation.isValid) {
@@ -243,7 +256,6 @@ export class SwapTool extends BaseTool {
         },
       );
     }
-    args.toToken = toTokenValidation.address;
 
     // STEP 3: Get wallet address
     let userAddress;
@@ -264,6 +276,7 @@ export class SwapTool extends BaseTool {
       slippage,
       limitPrice,
     };
+
     let selectedProvider: ISwapProvider;
     let quote: SwapQuote;
 
@@ -330,7 +343,7 @@ export class SwapTool extends BaseTool {
         try {
           quote = await selectedProvider.getQuote(swapParams, userAddress);
         } catch (error: any) {
-          throw error;
+          throw `Error in provider getQuote ${error}`;
         }
       } else {
         try {
@@ -464,7 +477,7 @@ export class SwapTool extends BaseTool {
           });
 
           // STEP 7: Handle token approval (for EVM chains)
-          if (!isSolanaNetwork(network)) {
+          if (network !== NetworkName.SOLANA && network !== NetworkName.HYPERLIQUID) {
             try {
               // Check if approval is needed and handle it
               const allowance = await selectedProvider.checkAllowance(
@@ -525,16 +538,26 @@ export class SwapTool extends BaseTool {
           let finalReceipt;
           try {
             // Sign and send swap transaction
-            const wallet = this.agent.getWallet();
-            receipt = await wallet.signAndSendTransaction(network, {
-              to: swapTx.to,
-              data: swapTx.data,
-              value: BigInt(swapTx.value),
-              lastValidBlockHeight: swapTx.lastValidBlockHeight,
-            });
+            if (network === NetworkName.HYPERLIQUID) {
+              const wallet = this.agent.getWallet();
+              const privateKey = await wallet.getPrivateKey(network);
+              receipt = await selectedProvider.buildSendTransaction(quote, privateKey);
+              console.log('🚀 ~ SwapTool ~ createTool ~ receipt:', receipt);
+              finalReceipt = {
+                hash: receipt,
+              };
+            } else {
+              const wallet = this.agent.getWallet();
+              receipt = await wallet.signAndSendTransaction(network, {
+                to: swapTx.to,
+                data: swapTx.data,
+                value: BigInt(swapTx.value),
+                lastValidBlockHeight: swapTx.lastValidBlockHeight,
+              });
+              finalReceipt = await receipt?.wait();
+            }
 
             // Wait for transaction to be mined
-            finalReceipt = await receipt?.wait();
           } catch (error: any) {
             throw error;
           }

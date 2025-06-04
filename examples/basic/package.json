@@ -46,6 +46,7 @@
     "@binkai/four-meme-provider": "workspace:*",
     "@binkai/image-plugin": "workspace:*",
     "@binkai/jupiter-provider": "workspace:*",
+    "@binkai/hyperliquid-provider": "workspace:*",
     "@binkai/knowledge-plugin": "workspace:*",
     "@binkai/kyber-provider": "workspace:*",
     "@binkai/oku-provider": "workspace:*",
