@@ -11,7 +11,7 @@ import {
   logger,
 } from '@binkai/core';
 import { ProviderRegistry } from './ProviderRegistry';
-import { IWalletProvider, WalletInfo } from './types';
+import { IWalletProvider, WalletInfo, WalletBalance } from './types';
 import { defaultTokens } from '@binkai/token-plugin';
 
 export interface WalletToolConfig extends IToolConfig {
@@ -142,6 +142,51 @@ export class GetWalletBalanceTool extends BaseTool {
     return results;
   }
 
+  private async fetchHyperliquidBalance(userAddress: string): Promise<WalletInfo> {
+    const url = 'https://api-ui.hyperliquid.xyz/info';
+    const payload = {
+      type: 'spotClearinghouseState',
+      user: userAddress,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Convert Hyperliquid response to WalletInfo format
+      const tokens: WalletBalance[] = data.balances?.map((balance: any) => ({
+        symbol: balance.coin,
+        balance: balance.total,
+        decimals: 18, // Default decimals, you might need to adjust based on token
+        name: balance.coin,
+        tokenAddress: balance.token?.toString(),
+      })) || [];
+
+
+      const walletInfo: WalletInfo = {
+        address: userAddress,
+        tokens: tokens,
+      };
+
+      return walletInfo;
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      throw error;
+    }
+  }
+  
+
   createTool(): CustomDynamicStructuredTool {
     logger.info('🛠️ Creating wallet balance tool');
     return {
@@ -171,6 +216,28 @@ export class GetWalletBalanceTool extends BaseTool {
                 supportedNetworks: supportedNetworks,
               },
             );
+          }
+
+          // Special handling for Hyperliquid
+          if (network === 'hyperliquid') {
+            onProgress?.({
+              progress: 50,
+              message: `Retrieving hyperliquid balance for ${address}`,
+            });
+            
+            const hyperliquidBalance = await this.fetchHyperliquidBalance(address);
+            
+            onProgress?.({
+              progress: 100,
+              message: `Successfully retrieved hyperliquid balance for ${address}`,
+            });
+
+            return JSON.stringify({
+              status: 'success',
+              data: hyperliquidBalance,
+              network,
+              address,
+            });
           }
 
           // STEP 2: Get wallet address
