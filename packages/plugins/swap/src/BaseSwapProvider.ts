@@ -523,6 +523,17 @@ export abstract class BaseSwapProvider implements ISwapProvider {
     }
   }
 
+  async buildSendTransaction(quote: SwapQuote, pkWallet: string): Promise<Transaction> {
+    return {
+      to: quote.tx?.to || '',
+      data: quote.tx?.data || '',
+      value: quote.tx?.value || '0',
+      network: quote.network,
+      spender: quote.tx?.to || '',
+      lastValidBlockHeight: quote.tx?.lastValidBlockHeight,
+    };
+  }
+
   /**
    * Public method to adjust token amount based on user's balance
    * This can be called directly from the SwapTool to handle precision issues

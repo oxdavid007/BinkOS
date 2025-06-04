@@ -110,6 +110,13 @@ export interface ISwapProvider {
   buildSwapTransaction(quote: SwapQuote, walletAddress: string): Promise<Transaction>;
 
   /**
+   * Build a transaction for swapping tokens
+   * @param quote The quote to execute
+   * @param pkWallet The private key of the user who will execute the swap
+   */
+  buildSendTransaction(quote: SwapQuote, pkWallet: string): Promise<Transaction>;
+
+  /**
    * Build a transaction for approving token spending
    * @param network The network to approve
    * @param tokenAddress The address of the token to approve

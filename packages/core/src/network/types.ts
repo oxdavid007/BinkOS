@@ -44,4 +44,6 @@ export interface Token {
   decimals: number;
   symbol: string;
   price?: string;
+  markPx?: string;
+  szDecimals?: number;
 }

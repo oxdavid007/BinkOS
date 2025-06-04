@@ -104,16 +104,8 @@ export class SwapTool extends BaseTool {
     }
 
     return z.object({
-      fromToken: z
-        .string()
-        .describe(
-          `The address of source token on network. (spend). If action on hyperliquid chain, can accept symbol`,
-        ),
-      toToken: z
-        .string()
-        .describe(
-          `The address of destination token on network. (receive). If action on hyperliquid chain, can accept symbol`,
-        ),
+      fromToken: z.string().describe(`The address of source token on network. (spend)`),
+      toToken: z.string().describe(`The address of destination token on network. (receive)`),
       amount: z.string().describe('The amount of tokens to swap'),
       limitPrice: z.number().default(0).describe('The price at which to place a limit order'),
       amountType: z
@@ -545,12 +537,11 @@ export class SwapTool extends BaseTool {
             // Sign and send swap transaction
             if (network === NetworkName.HYPERLIQUID) {
               const wallet = this.agent.getWallet();
-              receipt = await selectedProvider.buildSwapTransaction(
-                quote,
-                await wallet.getPrivateKey(network),
-              );
+              const privateKey = await wallet.getPrivateKey(network);
+              receipt = await selectedProvider.buildSendTransaction(quote, privateKey);
+              console.log('🚀 ~ SwapTool ~ createTool ~ receipt:', receipt);
               finalReceipt = {
-                hash: '0x123',
+                hash: receipt,
               };
             } else {
               const wallet = this.agent.getWallet();

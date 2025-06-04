@@ -244,21 +244,25 @@ async function main() {
   console.log('✓ Plugin registered\n');
 
   // Example 1: Buy with exact input amount on BNB Chain
-  console.log('💱 Example 1: Buy with exact input amount all providers');
-  const result1 = await agent.execute({
-    input: `
-        swap 1 usdc to hype on hyperliquid chain by hyperliquid .
-    `,
-  });
-  console.log('✓ Result:', result1, '\n');
+  // console.log('💱 Example 1: Buy with exact input amount all providers');
+  // const result = await agent.execute({
+  //   input: `
+  //     Buy 0.3 hype from usdc on hyperliquid chain by hyperliquid .
+  //     Use the following token addresses:
+  //       HYPE: 0x0d01dc56dcaaca66ad901c959b4011ec
+  //       USDC: 0x6d1e7cde53ba9467b783cb7c530ce054
+  //   `,
+  // });
+  // console.log('✓ Result:', result, '\n');
 
-  // Example 2: Sell with exact output amount on BNB Chain
-  // console.log('💱 Example 2: Sell with exact output amount on BNB Chain');
+  //  Example 2: Sell with exact output amount on Hyperliquid Chain
+  // console.log('💱 Example 2: Sell with exact output amount on Hyperliquid Chain');
   // const result2 = await agent.execute({
   //   input: `
-  //     Sell 100 BINK to BNB by Oku.
+  //     Sell 0.3 hype to usdc on hyperliquid chain by hyperliquid .
   //     Use the following token addresses:
-  //      BINK: 0x5fdfaFd107Fc267bD6d6B1C08fcafb8d31394ba1
+  //      HYPE: 0x0d01dc56dcaaca66ad901c959b4011ec
+  //      USDC: 0x6d1e7cde53ba9467b783cb7c530ce054
   //   `,
   // });
 
