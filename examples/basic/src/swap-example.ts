@@ -160,7 +160,7 @@ async function main() {
   });
   await walletPlugin.initialize({
     // defaultChain: 'bnb',
-    providers: [bnbProviderOS, birdeye],
+    providers: [bnbProviderOS, alchemyProvider, birdeye],
     supportedChains: ['bnb', 'solana', 'base', 'hyperliquid'],
   });
   console.log('✓ Provider initialized\n');
@@ -267,6 +267,15 @@ async function main() {
   // });
 
   // console.log('✓ Swap result:', result2, '\n');
+
+  // Example 3 : Check my balance on base chain
+  console.log('💱 Example 3: Check my balance on base chain');
+  const result = await agent.execute({
+    input: `
+      Check my balance on hyperliquid chain
+    `,
+  });
+  console.log('✓ Result:', result, '\n');
 
   // Get plugin information
   const registeredPlugin = agent.getPlugin('swap') as SwapPlugin;
