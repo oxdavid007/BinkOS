@@ -279,6 +279,34 @@ export const defaultTokens: Partial<Record<NetworkName, Record<string, TokenInfo
       verified: true,
     },
   },
+
+  
+  [NetworkName.HYPERLIQUID]: {
+    '0x6d1e7cde53ba9467b783cb7c530ce054': {
+      address: '0x6d1e7cde53ba9467b783cb7c530ce054',
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 8,
+      network: NetworkName.HYPERLIQUID,
+      verified: true,
+    },
+    '0x0d01dc56dcaaca66ad901c959b4011ec': {
+      address: '0x0d01dc56dcaaca66ad901c959b4011ec',
+      symbol: 'HYPE',
+      name: 'Hyperliquid',
+      decimals: 8,
+      network: NetworkName.HYPERLIQUID,
+      verified: true,
+    },
+    '0x368cb581f0d51e21aa19996d38ffdf6f': {
+      address: '0x368cb581f0d51e21aa19996d38ffdf6f',
+      symbol: 'TRUMP',
+      name: 'TRUMP',
+      decimals: 7,
+      network: NetworkName.HYPERLIQUID,
+      verified: true,
+    },
+  },
 };
 
 // Export a function to get tokens for a specific network

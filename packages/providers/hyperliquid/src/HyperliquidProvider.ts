@@ -58,9 +58,10 @@ export class HyperliquidProvider extends BaseSwapProvider {
   }
 
   protected async getToken(tokenAddress: string, network: NetworkName): Promise<Token> {
-    const token = await (
-      await fetch(`https://api-ui.hyperliquid.xyz/info`, {
-        method: 'POST',
+    try {
+      const token = await (
+        await fetch(`https://api-ui.hyperliquid.xyz/info`, {
+          method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -71,6 +72,10 @@ export class HyperliquidProvider extends BaseSwapProvider {
       })
     ).json();
 
+    if (!token) {
+      throw new Error('Token not found');
+    }
+
     const tokenInfo = {
       chainId: this.chainId,
       address: tokenAddress,
@@ -78,9 +83,15 @@ export class HyperliquidProvider extends BaseSwapProvider {
       symbol: token.name,
       price: token.midPx,
       markPx: token.markPx,
-      szDecimals: token.szDecimals,
-    };
-    return tokenInfo;
+        szDecimals: token.szDecimals,
+      };
+      return tokenInfo;
+    } catch (error) {
+      logger.error('Error getting token info:', error);
+      throw new Error(
+        `Failed to get token info: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
   }
 
   async getQuote(params: SwapParams, userAddress: string): Promise<SwapQuote> {
@@ -228,6 +239,7 @@ export class HyperliquidProvider extends BaseSwapProvider {
       }
 
       const orderStatus = result.response.data.statuses[0];
+      logger.info('Order status:', orderStatus);
 
       if (orderStatus.error) {
         throw new Error(`Order placement failed: ${orderStatus.error}`);
