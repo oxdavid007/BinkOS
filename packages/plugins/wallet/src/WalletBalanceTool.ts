@@ -142,6 +142,41 @@ export class GetWalletBalanceTool extends BaseTool {
     return results;
   }
 
+  async findHyperLiquidToken(symbol: string, network: NetworkName): Promise<any> {
+    try {
+      const response = await fetch('https://api-ui.hyperliquid.xyz/info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'spotMeta',
+        }),
+      });
+
+      const parseResponse = await response.json();
+      const allTokens = parseResponse.tokens;
+
+      const hyperTokenInfo = allTokens.find(
+        (t: any) => t.name?.toLowerCase() === symbol.toLowerCase(),
+      );
+
+      const tokenInfo = {
+        address: hyperTokenInfo.tokenId || '',
+        symbol: hyperTokenInfo.name,
+        name: hyperTokenInfo.fullName || hyperTokenInfo.name,
+        decimals: hyperTokenInfo.weiDecimals,
+        network: network as NetworkName,
+        index: hyperTokenInfo.index,
+      };
+
+      return tokenInfo;
+    } catch (error) {
+      console.error(`Error in findToken in  hyperliquid provider: ${error}`);
+      throw error;
+    }
+  }
+
   private async fetchHyperliquidBalance(userAddress: string): Promise<WalletInfo> {
     const url = 'https://api-ui.hyperliquid.xyz/info';
     const payload = {
@@ -173,12 +208,17 @@ export class GetWalletBalanceTool extends BaseTool {
       const data = await response.json();
 
       // Convert Hyperliquid response to WalletInfo format
-      const tokens: WalletBalance[] = data.balances?.map((balance: any) => ({
-        symbol: balance.coin,
-        balance: balance.total,
-        name: balance.coin,
-        tokenAddress: balance.token?.toString(),
-      })) || [];
+      const tokens: WalletBalance[] = await Promise.all(
+        (data.balances || []).map(async (balance: any) => {
+          const tokenAddress = await this.findHyperLiquidToken(balance.coin, NetworkName.HYPERLIQUID);
+          return {
+            symbol: balance.coin,
+            balance: balance.total,
+            name: balance.coin,
+            tokenAddress: tokenAddress.address,
+          };
+        })
+      );
 
       const walletInfo: WalletInfo = {
         address: userAddress,
@@ -191,6 +231,8 @@ export class GetWalletBalanceTool extends BaseTool {
       throw error;
     }
   }
+
+
 
   createTool(): CustomDynamicStructuredTool {
     logger.info('🛠️ Creating wallet balance tool');
