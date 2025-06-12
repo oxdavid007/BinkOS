@@ -28,6 +28,11 @@ interface DodoProviderConfig {
   chainId: ChainId;
 }
 
+const PROVIDER_NAMES = {
+  [ChainId.BNB]: 'dodo-bnb',
+  [ChainId.BASE]: 'dodo-base',
+} as const;
+
 export class DodoProvider extends BaseSwapProvider {
   private provider: Provider;
   private chainId: ChainId;
@@ -53,7 +58,7 @@ export class DodoProvider extends BaseSwapProvider {
   }
 
   getName(): string {
-    return 'dodo';
+    return PROVIDER_NAMES[this.chainId];
   }
 
   getSupportedChains(): string[] {

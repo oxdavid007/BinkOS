@@ -20,6 +20,12 @@ enum ChainId {
   BASE = 8453,
 }
 
+const PROVIDER_NAMES = {
+  [ChainId.BSC]: 'kyber-bnb',
+  [ChainId.BASE]: 'kyber-base',
+  [ChainId.ETH]: 'kyber-ethereum',
+} as const;
+
 export class KyberProvider extends BaseSwapProvider {
   private provider: Provider;
   private chainId: ChainId;
@@ -39,10 +45,7 @@ export class KyberProvider extends BaseSwapProvider {
   }
 
   getName(): string {
-    if (this.chainId === ChainId.BASE) {
-      return 'kyber-base';
-    }
-    return 'kyber-bnb';
+    return PROVIDER_NAMES[this.chainId];
   }
 
   getSupportedChains(): string[] {
