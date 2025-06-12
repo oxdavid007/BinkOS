@@ -213,8 +213,7 @@ async function main() {
   const okx = new OkxProvider(bnbProvider, 56);
   const jupiter = new JupiterProvider(solProvider);
   const thena = new ThenaProvider(ethProvider, 1);
-  const kyberBNB = new KyberProvider(bnbProvider, 56);
-  const kyberBase = new KyberProvider(baseProvider, 8453);
+  const kyber = new KyberProvider(baseProvider, 8453 as number);
   const hyperliquid = new HyperliquidProvider(hyperliquidProvider, ChainId.HYPERLIQUID);
 
   const dodoBnb = new DodoProvider({
@@ -227,7 +226,7 @@ async function main() {
   await swapPlugin.initialize({
     defaultSlippage: 0.5,
     // defaultChain: 'bnb',
-    providers: [okx, thena, jupiter, kyberBNB, kyberBase, hyperliquid],
+    providers: [okx, thena, jupiter, kyber, hyperliquid, dodoBnb],
     supportedChains: ['bnb', 'ethereum', 'solana', 'base', 'hyperliquid'], // These will be intersected with agent's networks
   });
 
@@ -255,7 +254,7 @@ async function main() {
   console.log('💱 Example 1: Buy with exact input amount all providers');
   const result = await agent.execute({
     input: `
-     Sell 0.6 USDC to BNB via dodo with 0.5% slippage on bnb chain.
+     Sell 0.001 BNB to USDC via dodo with 10% slippage on bnb chain.
       Use the following token addresses:
       USDC: 0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d
     `,
@@ -274,15 +273,6 @@ async function main() {
   // });
 
   // console.log('✓ Swap result:', result2, '\n');
-
-  // Example 3 : Check my balance on base chain
-  console.log('💱 Example 3: Check my balance on base chain');
-  const result = await agent.execute({
-    input: `
-      sell 0.001 bnb to usdc on bnb chain on kyber
-    `,
-  });
-  console.log('✓ Result:', result, '\n');
 
   // Get plugin information
   const registeredPlugin = agent.getPlugin('swap') as SwapPlugin;

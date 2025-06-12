@@ -191,7 +191,7 @@ export class DodoProvider extends BaseSwapProvider {
         sourceToken,
         destinationToken,
         userAddress,
-        params.slippage || 1.5,
+        params.slippage || 10,
       );
 
       // Create and store quote
@@ -228,7 +228,7 @@ export class DodoProvider extends BaseSwapProvider {
       toToken: destinationToken,
       fromAmount: ethers.formatUnits(amountIn, sourceToken.decimals),
       toAmount: swapData.resAmount,
-      slippage: params.slippage || 1.5,
+      slippage: params.slippage || 10,
       type: params.type,
       priceImpact: swapData.priceImpact || 0,
       route: ['dodo'],
