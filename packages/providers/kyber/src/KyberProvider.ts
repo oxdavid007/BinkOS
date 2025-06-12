@@ -39,7 +39,10 @@ export class KyberProvider extends BaseSwapProvider {
   }
 
   getName(): string {
-    return 'kyber';
+    if (this.chainId === ChainId.BASE) {
+      return 'kyber-base';
+    }
+    return 'kyber-bnb';
   }
 
   getSupportedChains(): string[] {
