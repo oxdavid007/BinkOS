@@ -212,14 +212,15 @@ async function main() {
   const okx = new OkxProvider(bnbProvider, 56);
   const jupiter = new JupiterProvider(solProvider);
   const thena = new ThenaProvider(ethProvider, 1);
-  const kyber = new KyberProvider(baseProvider, 8453 as number);
+  const kyberBNB = new KyberProvider(bnbProvider, 56);
+  const kyberBase = new KyberProvider(baseProvider, 8453);
   const hyperliquid = new HyperliquidProvider(hyperliquidProvider, ChainId.HYPERLIQUID);
 
   // Configure the plugin with supported chains
   await swapPlugin.initialize({
     defaultSlippage: 0.5,
     // defaultChain: 'bnb',
-    providers: [okx, thena, jupiter, kyber, hyperliquid],
+    providers: [okx, thena, jupiter, kyberBNB, kyberBase, hyperliquid],
     supportedChains: ['bnb', 'ethereum', 'solana', 'base', 'hyperliquid'], // These will be intersected with agent's networks
   });
 
@@ -272,7 +273,7 @@ async function main() {
   console.log('💱 Example 3: Check my balance on base chain');
   const result = await agent.execute({
     input: `
-      Check my balance on hyperliquid chain
+      sell 0.001 bnb to usdc on bnb chain on kyber
     `,
   });
   console.log('✓ Result:', result, '\n');
